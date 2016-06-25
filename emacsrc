@@ -1,0 +1,50 @@
+(defun cdkrot-c-lineup-inclass (langelem)
+  (let ((inclass (assoc 'inclass c-syntactic-context)))
+    (save-excursion
+      (goto-char (c-langelem-pos inclass))
+      (if (or (looking-at "struct")
+              (looking-at "typedef struct"))
+          '+
+        '++))))
+
+(defun cdkrot-cpp-mode ()
+  "Cdkrot C++ mode"
+  (c++-mode)
+  (c-set-style "K&R")
+  (setq c-basic-offset 4)
+  (setq-default indent-tabs-mode nil)
+  (setq-default tab-always-indent t)
+  (c-set-offset 'access-label '-)
+  (c-set-offset 'inclass 'cdkrot-c-lineup-inclass)
+  (c-set-offset 'innamespace 4)
+  (c-set-offset 'case-label 0)
+  (c-set-offset 'statement-case-intro 4)
+  (setq mode-name "Cdkrot C++")
+  )
+
+(add-to-list 'auto-mode-alist '("\\.[ch]p?p?\\'" . cdkrot-cpp-mode))
+
+(setq-default tab-width 4)
+(setq-default indent-tabs-mode nil)
+(setq-default tab-always-indent t)
+;(c-set-offset 'innamespace 4)
+;(c-set-offset 'access-label -4)
+;(c-set-offset 'inclass 8)
+;(add-to-list 'auto-mode-alist '("CMakelists.txt" . cmake-mode))
+
+(custom-set-variables
+ '(auto-save-file-name-transforms '((".*" "~/.emacs.d/autosaves/\\1" t)))
+ '(backup-directory-alist '((".*" . "~/.emacs.d/backups/"))))
+
+(make-directory "~/.emacs.d/autosaves/" t)
+
+(setq browse-url-browser-function 'w3m-browse-url)
+(autoload 'w3m-browse-url "w3m" "Ask a WWW browser to show a URL." t)
+(global-set-key "\C-xm" 'browse-url-at-point)
+
+(global-set-key "\C-cl" 'org-store-link)
+(global-set-key "\C-ca" 'org-agenda)
+(global-set-key "\C-cc" 'org-capture)
+(global-set-key "\C-cb" 'org-iswitchb)
+
+(windmove-default-keybindings)

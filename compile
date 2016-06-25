@@ -1,0 +1,28 @@
+#!/bin/sh
+
+if [ -n "${1}" -a -n "${2}" ]
+then
+    src="${1}"
+    out="${2}"
+fi
+
+if [ -n "${1}" -a -z "${2}" ] && echo "${1}" | grep -qE ".cpp"
+then
+    src="${1}"
+    out=$(echo "${1}" | sed -e "s:.cpp$::")
+else
+    if [ -n ${1} -a -z "${2}" ]
+    then
+        src="${1}.cpp"
+        out="${1}"
+    fi
+fi
+
+if [ -z "${src}" -o -z "${out}" ]
+then
+    echo "Invalid request" >&2
+    exit 1
+fi
+
+g++ -Wall -Wextra -ggdb3 -std=c++14 -DLOCAL -D_GLIBCXX_DEBUG -fdiagnostics-color=always ${src} -o ${out}
+

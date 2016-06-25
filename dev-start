@@ -1,0 +1,5 @@
+DEVROOT=$(pwd)
+
+function ROOT() {
+    cd $DEVROOT           
+}
