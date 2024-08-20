@@ -1,50 +1,164 @@
-(defun cdkrot-c-lineup-inclass (langelem)
-  (let ((inclass (assoc 'inclass c-syntactic-context)))
+(require 'package)
+(add-to-list 'package-archives
+             '("melpa" . "https://melpa.org/packages/"))
+(package-initialize)
+(setq vc-follow-symlinks nil)
+
+
+(custom-set-variables
+ ;; custom-set-variables was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ '(ansi-color-faces-vector
+   [default default default italic underline success warning error])
+ '(auto-save-file-name-transforms (quote ((".*" "~/.emacs.d/autosaves/\\1" t))))
+ '(backup-directory-alist (quote ((".*" . "~/.emacs.d/backups/"))))
+ '(custom-enabled-themes (quote (tango-dark)))
+ '(inhibit-startup-screen t)
+ '(package-selected-packages
+   (quote
+    (jsonnet-mode yaml-mode yaml go-mode idris-mode haskell-mode rust-mode markdown-mode graphviz-dot-mode find-file-in-repository auto-complete-clang-async auto-complete)))
+ '(safe-local-variable-values
+   (quote
+    ((c-font-lock-extra-types "\\sw+_t" "FILE" "va_list")
+     (c-font-lock-extra-types "\\sw+_t" "FILE" "va_list" "DIR")))))
+
+
+(make-directory "~/.emacs.d/autosaves/" t)
+
+(setq column-number-mode t)
+
+
+(defun inside-class-enum-p (pos)
+  "Checks if POS is within the braces of a C++ \"enum class\"."
+  (ignore-errors
     (save-excursion
-      (goto-char (c-langelem-pos inclass))
-      (if (or (looking-at "struct")
-              (looking-at "typedef struct"))
-          '+
-        '++))))
+      (goto-char pos)
+      (up-list -1)
+      (backward-sexp 1)
+      (or (looking-back "enum\\s-+class\\s-+")
+	  (looking-back "enum\\s-+class\\s-+\\S-+\\s-*:\\s-*"))
+      )))
+
+(defun align-enum-class (langelem)
+  (if (inside-class-enum-p (c-langelem-pos langelem))
+      0
+    (c-lineup-topmost-intro-cont langelem)))
+
+(defun align-enum-class-closing-brace (langelem)
+  (if (inside-class-enum-p (c-langelem-pos langelem))
+      '-
+    '+))
+
+(defun fix-enum-class ()
+  "Setup `c++-mode' to better handle \"class enum\"."
+  (add-to-list 'c-offsets-alist '(topmost-intro-cont . align-enum-class))
+  (add-to-list 'c-offsets-alist
+	       '(statement-cont . align-enum-class-closing-brace)))
+
+(setq-default indent-tabs-mode nil)
+(setq-default tab-always-indent t)
+
+(add-hook 'after-change-major-mode-hook 
+          '(lambda () 
+             (setq-default indent-tabs-mode nil)
+             (setq c-basic-indent 4)
+             (setq tab-width 4)))
 
 (defun cdkrot-cpp-mode ()
-  "Cdkrot C++ mode"
+  "Cdkrot++"
+  (interactive)
   (c++-mode)
   (c-set-style "K&R")
   (setq c-basic-offset 4)
   (setq-default indent-tabs-mode nil)
   (setq-default tab-always-indent t)
   (c-set-offset 'access-label '-)
-  (c-set-offset 'inclass 'cdkrot-c-lineup-inclass)
+  (c-set-offset 'inclass '+)
   (c-set-offset 'innamespace 4)
   (c-set-offset 'case-label 0)
   (c-set-offset 'statement-case-intro 4)
+  (c-set-offset 'inlambda 0)
+  (add-to-list 'c-offsets-alist '(topmost-intro-cont . align-enum-class))
+  (add-to-list 'c-offsets-alist
+	       '(statement-cont . align-enum-class-closing-brace))
   (setq mode-name "Cdkrot C++")
   )
 
-(add-to-list 'auto-mode-alist '("\\.[ch]p?p?\\'" . cdkrot-cpp-mode))
+(add-to-list 'auto-mode-alist '("\\.tex\\'" . latex-mode))
+(add-to-list 'auto-mode-alist '("\\.cpp\\'" . cdkrot-cpp-mode))
+(add-to-list 'auto-mode-alist '("\\.hpp\\'" . cdkrot-cpp-mode))
+(add-to-list 'auto-mode-alist '("\\.h\\'"   . cdkrot-cpp-mode))
 
-(setq-default tab-width 4)
-(setq-default indent-tabs-mode nil)
-(setq-default tab-always-indent t)
-;(c-set-offset 'innamespace 4)
-;(c-set-offset 'access-label -4)
-;(c-set-offset 'inclass 8)
-;(add-to-list 'auto-mode-alist '("CMakelists.txt" . cmake-mode))
-
-(custom-set-variables
- '(auto-save-file-name-transforms '((".*" "~/.emacs.d/autosaves/\\1" t)))
- '(backup-directory-alist '((".*" . "~/.emacs.d/backups/"))))
-
-(make-directory "~/.emacs.d/autosaves/" t)
-
-(setq browse-url-browser-function 'w3m-browse-url)
-(autoload 'w3m-browse-url "w3m" "Ask a WWW browser to show a URL." t)
-(global-set-key "\C-xm" 'browse-url-at-point)
-
-(global-set-key "\C-cl" 'org-store-link)
-(global-set-key "\C-ca" 'org-agenda)
-(global-set-key "\C-cc" 'org-capture)
-(global-set-key "\C-cb" 'org-iswitchb)
-
+(setq epa-file-cache-passphrase-for-symmetric-encryption t)
 (windmove-default-keybindings)
+(global-set-key (kbd "S-C-<left>") 'shrink-window-horizontally)
+(global-set-key (kbd "S-C-<right>") 'enlarge-window-horizontally)
+(global-set-key (kbd "S-C-<down>") 'shrink-window)
+(global-set-key (kbd "S-C-<up>") 'enlarge-window)
+
+(global-set-key (kbd "C-x r") 'rectangle-mark-mode)
+
+(defun reverse-input-method (input-method)
+  "Build the reverse mapping of single letters from INPUT-METHOD."
+  (interactive
+   (list (read-input-method-name "Use input method (default current): ")))
+  (if (and input-method (symbolp input-method))
+      (setq input-method (symbol-name input-method)))
+  (let ((current current-input-method)
+        (modifiers '(nil (control) (meta) (control meta))))
+    (when input-method
+      (activate-input-method input-method))
+    (when (and current-input-method quail-keyboard-layout)
+      (dolist (map (cdr (quail-map)))
+        (let* ((to (car map))
+               (from (quail-get-translation
+                      (cadr map) (char-to-string to) 1)))
+          (when (and (characterp from) (characterp to))
+            (dolist (mod modifiers)
+              (define-key local-function-key-map
+                (vector (append mod (list from)))
+                (vector (append mod (list to)))))))))
+    (when input-method
+      (activate-input-method current))))
+
+(global-set-key (kbd "M-o") 'backward-sexp)
+(global-set-key (kbd "M-p") 'forward-sexp)
+(global-set-key (kbd "<C-tab>") 'indent-region)
+(global-set-key (kbd "<C-f5>") 'linum-mode)
+(setq linum-format "%4d \u2502 ")
+(global-set-key (kbd "C-c _") 'comment-region)
+(global-set-key (kbd "C-c =") 'uncomment-region)
+
+(global-set-key (kbd "<f7>")  (lambda () (interactive) (shell-command "./r.sh")))
+
+(reverse-input-method "russian-computer")
+
+(ido-mode t)
+
+(dolist (hook '(latex-mode-hook))
+  (add-hook hook (lambda () (flyspell-mode 1) (cycle-ispell-languages))))
+(dolist (hook '(change-log-mode-hook log-edit-mode-hook))
+  (add-hook hook (lambda () (flyspell-mode -1))))
+
+(let ((langs '("russian" "english")))
+  (setq lang-ring (make-ring (length langs)))
+  (dolist (elem langs) (ring-insert lang-ring elem)))
+
+(defun cycle-ispell-languages ()
+  (interactive)
+  (let ((lang (ring-ref lang-ring -1)))
+    (ring-insert lang-ring lang)
+    (ispell-change-dictionary lang))
+  (flyspell-buffer)
+
+  )
+
+(global-set-key [f6] 'cycle-ispell-languages)
+(custom-set-faces
+ ;; custom-set-faces was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ )

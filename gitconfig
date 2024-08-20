@@ -1,0 +1,7 @@
+[user]
+	email = cdkrot0@gmail.com
+	name = Alice Sayutina
+[push]
+	default = current
+[alias]
+    st = status

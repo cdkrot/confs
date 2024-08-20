@@ -1,0 +1,71 @@
+zstyle ':completion:*' completer _expand _complete _ignored _approximate
+zstyle ':completion:*' matcher-list '' '' 'm:{[:lower:][:upper:]}={[:upper:][:lower:]}'
+zstyle :compinstall filename '/home/cdkrot/.zshrc'
+
+autoload -Uz compinit
+compinit
+HISTFILE=~/.histfile
+HISTSIZE=1000000
+SAVEHIST=1000000
+setopt autocd extendedglob notify
+bindkey -e
+force_color_prompt=yes
+
+if [ -n "$force_color_prompt" ]; then
+    if [ -x /usr/bin/tput ] && tput setaf 1 >&/dev/null; then
+	# We have color support; assume it's compliant with Ecma-48
+	# (ISO/IEC-6429). (Lack of such support is extremely rare, and such
+	# a case would tend to support setf rather than setaf.)
+	color_prompt=yes
+    else
+	color_prompt=
+    fi
+fi
+
+unset color_prompt force_color_prompt
+
+# enable color support of ls and also add handy aliases
+if [ -x /usr/bin/dircolors ]; then
+    test -r ~/.dircolors && eval "$(dircolors -b ~/.dircolors)" || eval "$(dircolors -b)"
+    alias ls='ls --color=auto'
+    #alias dir='dir --color=auto'
+    #alias vdir='vdir --color=auto'
+
+    alias grep='grep --color=auto'
+    alias fgrep='fgrep --color=auto'
+    alias egrep='egrep --color=auto'
+fi
+
+function get_git_branch { 
+   git branch 2> /dev/null | sed -e '/^[^*]/d' -e 's/* \(.*\)/\1/'
+}
+function get_git_dirty { 
+   git diff --quiet || echo '*'
+}
+function get_git_prompt { 
+   git rev-parse HEAD &> /dev/null || return 1 
+   echo "(%{\033[91m%}$(get_git_branch)$(get_git_dirty)%{$reset_color%}) "
+}
+# PROMPT="$(get_git_prompt)\$ "
+
+setopt prompt_subst
+autoload -U colors && colors
+export PROMPT='$(get_git_prompt)''%{$fg[green]%}%n@%m%{$reset_color%}%/ $ '
+PATH=/home/cdkrot/.cargo/bin:$PATH
+
+export WORDCHARS='~!#$%^&*(){}[]<>?.+;-'
+export EDITOR=/usr/bin/emacs
+
+setopt share_history
+
+alias git-branch="git branch --sort=-committerdate"
+
+function git-co() {
+    git fetch origin $1
+    git switch $1
+}
+
+autoload -U compinit; compinit
+# source ~/util/fzf-tab/fzf-tab.plugin.zsh
+
+ulimit -Sn 100000
