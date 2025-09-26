@@ -6,5 +6,6 @@
 [alias]
     st = status
     get = "!f() { git fetch origin \"$1\" && git switch \"$1\"; }; f"
+	mm = "!f() { main=$(git show-ref --verify --quiet refs/heads/master && echo 'master' || echo 'main'); git fetch origin $main; git merge origin/$main; }; f"
 [merge]
     conflictstyle = zdiff3
