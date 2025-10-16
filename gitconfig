@@ -1,11 +1,12 @@
 [user]
-	email = cdkrot0@gmail.com
-	name = Alice Sayutina
+    email = cdkrot0@gmail.com
+    name = Alice Sayutina
 [push]
-	default = current
+    default = current
 [alias]
     st = status
     get = "!f() { git fetch origin \"$1\" && git switch \"$1\"; }; f"
-	mm = "!f() { main=$(git show-ref --verify --quiet refs/heads/master && echo 'master' || echo 'main'); git fetch origin $main; git merge origin/$main; }; f"
+    mm = "!f() { main=$(git show-ref --verify --quiet refs/heads/master && echo 'master' || echo 'main'); git fetch origin $main; git merge origin/$main; }; f"
+    mmpush = "!f() { git mm; git push; }; f"
 [merge]
     conflictstyle = zdiff3
